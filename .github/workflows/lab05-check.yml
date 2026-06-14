@@ -1,0 +1,61 @@
+name: Lab 05 - Compose Readiness Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  compose-check:
+    name: Validate Docker Compose Stack
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Newman + HTML reporter
+        run: npm install -g newman newman-reporter-htmlextra
+
+      - name: Create .env from example
+        run: cp .env.example .env
+
+      - name: Build and start Compose stack
+        run: docker compose up -d --build --wait
+
+      - name: Test API /health (port 8000)
+        run: curl -fsS http://localhost:8000/health
+
+      - name: Run Newman collection
+        run: |
+          mkdir -p reports
+          # Ưu tiên chạy file camera-stream mới
+          newman run postman/collections/camera-stream.postman_collection.json \
+            -e postman/environments/camera-stream_local.postman_environment.json \
+            -r cli,junit,htmlextra \
+            --reporter-junit-export reports/newman-lab05-compose.xml \
+            --reporter-htmlextra-export reports/newman-lab05-compose.html
+
+      - name: Verify readiness checklist
+        run: |
+          CHECKLIST="checklists/readiness-checklist.md"
+          TOTAL=$(grep -cE '^[[:space:]]*-[[:space:]]*\[[ xX]\]' "$CHECKLIST" || true)
+          CHECKED=$(grep -cE '^[[:space:]]*-[[:space:]]*\[[xX]\]' "$CHECKLIST" || true)
+          if [ "${CHECKED:-0}" -lt 6 ]; then
+            echo "::error::Cần tick đủ 6 mục readiness"
+            exit 1
+          fi
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newman-reports
+          path: reports/
