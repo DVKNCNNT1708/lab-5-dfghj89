@@ -1,12 +1,12 @@
 {
-  "name": "fit4110-lab05-docker-compose-readiness",
-  "version": "0.1.0",
-  "description": "FIT4110 Lab 05 - Docker Compose readiness and end-to-end verification for Smart Campus services",
+  "name": "fit4110-lab05-camera-stream-a2",
+  "version": "1.0.0",
+  "description": "FIT4110 Lab 05 - Camera Stream & AI Vision Readiness for Team A2",
   "private": true,
   "scripts": {
-    "mock:iot": "prism mock contracts/iot-ingestion.openapi.yaml --host 0.0.0.0 --port 4010",
-    "lint:openapi": "spectral lint contracts/*.yaml",
-    "test:compose": "echo 'TODO: copy Postman collection from Lab 04 into postman/collections and update this script.'"
+    "mock:camera": "prism mock contracts/camera-stream.openapi.yaml --host 0.0.0.0 --port 4010",
+    "lint:openapi": "spectral lint contracts/camera-stream.openapi.yaml",
+    "test:compose": "newman run postman/collections/camera-stream.postman_collection.json -e postman/environments/camera-stream_local.postman_environment.json -r cli,json,html --reporter-html-export reports/newman-lab05-compose.html --reporter-json-export reports/newman-lab05-compose.json"
   },
   "devDependencies": {
     "@stoplight/prism-cli": "^5.10.0",

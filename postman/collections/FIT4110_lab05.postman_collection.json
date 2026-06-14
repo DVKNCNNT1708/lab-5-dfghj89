@@ -1,0 +1,318 @@
+{
+  "info": {
+    "_postman_id": "fit4110-lab05-collection",
+    "name": "FIT4110 Lab 05 - IoT Ingestion API",
+    "description": "Collection để test API trong stack Docker Compose Lab 05",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "lab05",
+    "_exported_at": "2026-06-14T00:00:00.000Z"
+  },
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Kiểm tra trạng thái API service"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sensor Readings",
+      "item": [
+        {
+          "name": "Create Reading - Temperature Valid",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_id\": \"ESP32-LAB-A01\",\n  \"metric\": \"temperature\",\n  \"value\": 31.5,\n  \"unit\": \"celsius\",\n  \"timestamp\": \"2026-06-14T10:00:00+07:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/readings",
+              "host": ["{{baseUrl}}"],
+              "path": ["readings"]
+            },
+            "description": "Gửi một bản ghi nhiệt độ hợp lệ"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Reading - Boundary High Temp",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_id\": \"ESP32-LAB-B01\",\n  \"metric\": \"temperature\",\n  \"value\": 80,\n  \"unit\": \"celsius\",\n  \"timestamp\": \"2026-06-14T10:05:00+07:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/readings",
+              "host": ["{{baseUrl}}"],
+              "path": ["readings"]
+            },
+            "description": "Gửi bản ghi nhiệt độ ở giới hạn trên (80°C)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Reading - Humidity",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_id\": \"ESP32-LAB-C01\",\n  \"metric\": \"humidity\",\n  \"value\": 65.0,\n  \"unit\": \"percent\",\n  \"timestamp\": \"2026-06-14T10:10:00+07:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/readings",
+              "host": ["{{baseUrl}}"],
+              "path": ["readings"]
+            },
+            "description": "Gửi bản ghi độ ẩm"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Reading - Invalid Temp (Too High)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_id\": \"ESP32-LAB-D01\",\n  \"metric\": \"temperature\",\n  \"value\": 85,\n  \"unit\": \"celsius\",\n  \"timestamp\": \"2026-06-14T10:15:00+07:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/readings",
+              "host": ["{{baseUrl}}"],
+              "path": ["readings"]
+            },
+            "description": "Gửi bản ghi nhiệt độ không hợp lệ (vượt quá 80°C)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Latest Readings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/readings/latest?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["readings", "latest"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lấy 10 bản ghi gần nhất"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Latest by Device",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/readings/latest?device_id=ESP32-LAB-A01&limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["readings", "latest"],
+              "query": [
+                {
+                  "key": "device_id",
+                  "value": "ESP32-LAB-A01"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Lấy 5 bản ghi gần nhất từ device ESP32-LAB-A01"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reading by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/readings/R-20260614-0001",
+              "host": ["{{baseUrl}}"],
+              "path": ["readings", "R-20260614-0001"]
+            },
+            "description": "Lấy chi tiết một bản ghi theo ID (thay reading_id nếu cần)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Error Cases",
+      "item": [
+        {
+          "name": "Missing Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_id\": \"ESP32-LAB-E01\",\n  \"metric\": \"temperature\",\n  \"value\": 25.0,\n  \"unit\": \"celsius\",\n  \"timestamp\": \"2026-06-14T11:00:00+07:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/readings",
+              "host": ["{{baseUrl}}"],
+              "path": ["readings"]
+            },
+            "description": "Gửi request mà không có token (expected: 401)"
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid-token-123",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/readings/latest",
+              "host": ["{{baseUrl}}"],
+              "path": ["readings", "latest"]
+            },
+            "description": "Gửi request với token sai (expected: 401)"
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Payload (Missing Field)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"metric\": \"temperature\",\n  \"value\": 25.0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/readings",
+              "host": ["{{baseUrl}}"],
+              "path": ["readings"]
+            },
+            "description": "Gửi request thiếu các trường bắt buộc (expected: 422)"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "local-dev-token",
+      "type": "string"
+    }
+  ]
+}

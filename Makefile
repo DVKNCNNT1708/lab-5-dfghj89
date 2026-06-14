@@ -1,31 +1,32 @@
 .PHONY: install lint build run compose-up compose-down logs test-compose
 
-# Install Node dependencies for Prism/Spectral/Newman
+# Cài đặt Node dependencies cho Prism/Newman
 install:
 	npm install
 
-# Lint OpenAPI contracts with Spectral
+# Kiểm tra tính hợp lệ của OpenAPI Contract
 lint:
-	npx spectral lint contracts/*.yaml
+	npx spectral lint contracts/camera-ai-vision.openapi.yaml
 
-# Build Docker image for API only
+# Build Docker image cho Camera Stream API
 build:
-	docker build -t fit4110/iot-ingestion:lab05 .
+	docker build -t fit4110/camera-stream-api:v1.0.0-a2 .
 
-# Run API container standalone (not via compose)
+# Chạy thử container API (không dùng compose)
 run:
-	docker run --rm --name fit4110-api-lab05 -p 8000:8000 --env-file .env.example fit4110/iot-ingestion:lab05
+	docker run --rm --name camera-stream-api -p 8000:8000 --env-file .env.example fit4110/camera-stream-api:v1.0.0-a2
 
-# Compose commands
+# Điều phối với Docker Compose
 compose-up:
 	docker compose up -d --build
 
 compose-down:
 	docker compose down
 
+# Xem logs của toàn bộ hệ thống
 logs:
 	docker compose logs -f
 
-# Run Newman tests on compose stack
+# Chạy test Newman trên stack Compose
 test-compose:
 	npm run test:compose

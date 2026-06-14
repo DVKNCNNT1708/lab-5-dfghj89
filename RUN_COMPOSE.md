@@ -1,114 +1,52 @@
-# RUN_COMPOSE.md – Hướng dẫn chạy Lab 05
+# RUN_COMPOSE.md – Hướng dẫn vận hành Camera Stream Stack (Team A2)
 
-Tài liệu này hướng dẫn người khác clone repo sạch và chạy lại stack Compose của Lab 05.
+Tài liệu này hướng dẫn chạy toàn bộ stack Camera Stream tích hợp AI Vision dành cho Lab 05.
 
----
-
-## 1. Clone repo
-
+## 1. Chuẩn bị
 ```bash
-git clone <repo-url>
-cd FIT4110_lab05_docker_compose_readiness
-```
-
----
-
-## 2. Cài dependencies cho Newman/Prism/Spectral (tuỳ chọn)
-
-```bash
-npm install
-```
-
----
-
-## 3. Build & chạy stack Docker Compose
-
-```bash
-# Copy .env.example sang .env và chỉnh sửa nếu cần
+# Copy cấu hình môi trường
 cp .env.example .env
 
-# Build images (nếu chưa có) và khởi động các container trong nền
+# Khởi chạy stack với Docker Compose
 docker compose up -d --build
 ```
 
-Lệnh trên sẽ tạo các container:
+## 2. Kiểm tra trạng thái sẵn sàng (Readiness)
+Sau khi chạy, hãy đợi các container báo `healthy`. Kiểm tra qua:
+- **Camera API (Port 8000):** `curl http://localhost:8000/health`
+- **AI Vision Provider (Port 9000):** `curl http://localhost:9000/health`
+- **Database:** `docker exec -it camera-db pg_isready -U lab05`
 
-- `fit4110-db-lab05` (PostgreSQL)
-- `fit4110-ai-lab05` (AI service mẫu chạy port 9000)
-- `fit4110-api-lab05` (API FastAPI trên port 8000)
+## 3. Kiểm thử luồng Async Detection
+Do hệ thống chạy theo mô hình Async (202 Accepted), quy trình kiểm thử như sau:
 
-Theo dõi log:
-
+**Bước 1: Gửi yêu cầu phân tích frame**
 ```bash
-docker compose logs -f
+curl -X POST http://localhost:8000/detect \
+  -H "Authorization: Bearer lab-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cameraId": "CAM-01",
+    "frameUrl": "https://campus.local/frame01.jpg",
+    "timestamp": "2026-05-13T10:00:00Z",
+    "requestId": "REQ-001",
+    "analysisType": "PERSON_DETECTION"
+  }'
 ```
+*Kết quả mong đợi:* Trả về `202 Accepted` cùng một `detectionId`.
 
-Sau vài giây, kiểm tra health của mỗi service:
-
+**Bước 2: Kiểm tra trạng thái xử lý** (Sử dụng `detectionId` từ bước 1)
 ```bash
-# API
-curl http://localhost:8000/health
-
-# AI service
-curl http://localhost:9000/health
-
-# DB readiness
-docker exec -it fit4110-db-lab05 pg_isready -U $POSTGRES_USER
+curl -H "Authorization: Bearer lab-token" http://localhost:8000/detections/<detectionId>
 ```
+*Kết quả mong đợi:* Ban đầu là `PROCESSING`, sau vài giây sẽ chuyển sang `COMPLETED` kèm dữ liệu `boundingBox` và `trackingId` từ AI Provider.
 
-Bạn cũng có thể truy cập endpoint `/predict` của AI service để xem kết quả mẫu:
-
+**Bước 3: Xem danh sách các phát hiện**
 ```bash
-curl -X POST http://localhost:9000/predict
+curl -H "Authorization: Bearer lab-token" http://localhost:8000/detections
 ```
 
----
-
-## 4. Chạy Newman test trên stack Compose (tuỳ chọn)
-
-```bash
-npm run test:compose
-```
-
-Report sinh tại:
-
-```text
-reports/newman-lab05-compose.xml
-reports/newman-lab05-compose.html
-```
-
----
-
-## 5. Dừng stack
-
-Khi không cần nữa, dừng và xoá các container bằng:
-
-```bash
-docker compose down
-```
-
-Nếu muốn xoá volume dữ liệu của DB, thêm tuỳ chọn `-v`:
-
+## 4. Dọn dẹp
 ```bash
 docker compose down -v
 ```
-
----
-
-## 6. Lệnh nhanh
-
-Bạn có thể dùng Makefile:
-
-```bash
-make compose-up
-make compose-down
-make logs
-```
-
----
-
-## 7. Mẹo gỡ lỗi
-
-- Sử dụng `docker compose ps` để xem trạng thái container.
-- Nếu API trả lỗi kết nối DB, hãy kiểm tra biến môi trường `POSTGRES_*` trong `.env` và đảm bảo DB đã sẵn sàng (`pg_isready`).
-- Nếu AI service cần tải mô hình lớn, tăng `start_period` của healthcheck trong `docker-compose.yml`.
